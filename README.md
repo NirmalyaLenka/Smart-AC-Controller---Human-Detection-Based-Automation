@@ -202,16 +202,27 @@ smart-ac-controller/
  ## file functions
 
 smart_ac_controller.ino — the main firmware that runs on the ESP8266. It reads the PIR sensor to detect human presence, controls the relay to switch the AC on and off, runs the 5-minute occupancy timeout, handles the 15-minute maintenance cycle with the 1-minute AC pulse, reads temperature and humidity from the DHT11 every 5 seconds, hosts the web server with the dashboard and JSON status endpoint, and processes manual override commands from the web.
+
 config.h — the settings file. All timing values, pin numbers, relay polarity, device name, baud rate, web server port, and the optional static IP configuration live here. You change this file to customize behaviour without touching the main firmware code.
+
 config_secrets.h.example — a template for your Wi-Fi credentials. You rename it to config_secrets.h, fill in your network name and password, and it stays off GitHub because the gitignore blocks it.
+
 demo.html — a fully working browser simulation of the system. No hardware needed. You can trigger motion, clear the room, skip the timer forward, and watch the maintenance cycle run. Temperature and humidity drift in real time as the AC runs or sits idle.
+
 wiring_diagram.html — a colour-coded visual diagram showing every wire connection between all five components. Open it in any browser. The mains section is clearly separated and marked with warnings.
+
 WIRING.md — the full text wiring guide covering ASCII diagrams, plain English step-by-step instructions for each component, a shared ground explanation, NodeMCU pin reference table, recommended wire colours, and a checklist to run through before powering on for the first time.
+
 COMPONENTS.md — covers every component in detail: what it does, why it was chosen, what specs to look for when buying, acceptable cheaper or more accurate substitutes, estimated prices, and where to buy in India and internationally.
+
 TROUBLESHOOTING.md — a problem and solution guide covering the most common failures: code upload errors, Wi-Fi connection issues, dashboard not loading, PIR false triggers or no triggers, DHT11 bad readings, relay not clicking, relay clicking but AC staying off, and AC flickering.
+
 CHANGELOG.md — records what changed in each version and has a section listing possible future features like MQTT support, Home Assistant integration, OTA firmware updates, and temperature-based control.
+
 CONTRIBUTING.md — explains how to report bugs, suggest features, and submit pull requests. Includes code style guidelines, a list of what does and does not fit the project, and a short section for people who have never used Git before.
+
 LICENSE — MIT license giving anyone permission to use, modify, and share the project, with a safety disclaimer about mains voltage attached below it.
+
 .gitignore — tells Git to ignore Arduino build output files, the secrets credentials file, operating system junk files like .DS_Store and Thumbs.db, VS Code folders, and OTA firmware binaries so none of that ends up in your repository.
 
  
