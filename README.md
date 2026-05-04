@@ -71,7 +71,8 @@ Not required, but nice to have. The DHT11 measures temperature and humidity and 
 - Relay GND goes to GND
 - Relay IN (signal) goes to D1 (GPIO5) on NodeMCU
 ### Relay to AC Power
-This part involves mains electricity. Please be careful. If you are not comfortable working with 230V / 120V wiring, ask an electrician to help with just this last step.
+This part involves mains electricity. Please be careful. If you are not comfortable working with 230V / 120V wiring, ask an electrician to help with just this last step.  <img width="458" height="608" alt="image" src="https://github.com/user-attachments/assets/f5f47fcc-0b59-4a9a-8c31-dea288fd7f56" />
+
  
 - Cut one wire of the AC power cord (the Live / Line wire, usually brown or red)
 - Connect one end to the COM terminal on the relay
