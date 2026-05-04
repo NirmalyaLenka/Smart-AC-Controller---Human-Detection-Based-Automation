@@ -1,0 +1,61 @@
+# Arduino build artifacts
+build/
+*.elf
+*.bin
+*.hex
+*.map
+
+# Arduino IDE temp files
+*.bak
+*.orig
+*.rej
+
+# Secrets file - never commit this
+config_secrets.h
+secrets.h
+credentials.h
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Python (if you use any helper scripts)
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+
+# Node (if you use any web tooling)
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+~*
+
+# Arduino Library Manager cache
+libraries/
+
+# OTA update files
+firmware.bin
+update.bin

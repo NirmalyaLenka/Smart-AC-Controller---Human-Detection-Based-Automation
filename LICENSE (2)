@@ -1,0 +1,38 @@
+MIT License
+
+Copyright (c) 2026 Smart AC Controller Project
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+IMPORTANT SAFETY DISCLAIMER
+
+This project involves wiring that connects to mains electricity (110V / 230V AC).
+Working with mains voltage is dangerous and can cause serious injury or death if
+done incorrectly. The authors of this project take no responsibility for any
+damage, injury, or loss of life resulting from the use or misuse of this project.
+
+By using this software and following these instructions, you accept full
+responsibility for your own safety and the safety of others around you. If you
+are not confident working with mains electricity, please consult a qualified
+electrician for the mains wiring portion of the installation.
+
+This project is provided for educational and personal use. It is not a certified
+electrical product and has not been tested to any safety standard.
