@@ -201,7 +201,6 @@ smart-ac-controller/
 ```
  ## file functions
 
- ```
 smart_ac_controller.ino — the main firmware that runs on the ESP8266. It reads the PIR sensor to detect human presence, controls the relay to switch the AC on and off, runs the 5-minute occupancy timeout, handles the 15-minute maintenance cycle with the 1-minute AC pulse, reads temperature and humidity from the DHT11 every 5 seconds, hosts the web server with the dashboard and JSON status endpoint, and processes manual override commands from the web.
 config.h — the settings file. All timing values, pin numbers, relay polarity, device name, baud rate, web server port, and the optional static IP configuration live here. You change this file to customize behaviour without touching the main firmware code.
 config_secrets.h.example — a template for your Wi-Fi credentials. You rename it to config_secrets.h, fill in your network name and password, and it stays off GitHub because the gitignore blocks it.
@@ -214,7 +213,7 @@ CHANGELOG.md — records what changed in each version and has a section listing 
 CONTRIBUTING.md — explains how to report bugs, suggest features, and submit pull requests. Includes code style guidelines, a list of what does and does not fit the project, and a short section for people who have never used Git before.
 LICENSE — MIT license giving anyone permission to use, modify, and share the project, with a safety disclaimer about mains voltage attached below it.
 .gitignore — tells Git to ignore Arduino build output files, the secrets credentials file, operating system junk files like .DS_Store and Thumbs.db, VS Code folders, and OTA firmware binaries so none of that ends up in your repository.
----
+
  
 ## License
  
