@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart AC Controller - Browser Demo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:         #0b0f17;
+    --surface:    #111827;
+    --border:     #1e293b;
+    --muted:      #475569;
+    --text:       #cbd5e1;
+    --bright:     #f1f5f9;
+    --blue:       #38bdf8;
+    --green:      #4ade80;
+    --red:        #f87171;
+    --yellow:     #fbbf24;
+    --green-dim:  #052e16;
+    --red-dim:    #2d0f0f;
+    --yellow-dim: #27180a;
+    --blue-dim:   #0c1a2e;
+  }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px 16px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  header h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1.5rem;
+    color: var(--bright);
+    letter-spacing: -0.5px;
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 0.8rem;
+    margin-top: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .demo-banner {
+    background: var(--blue-dim);
+    border: 1px solid var(--blue);
+    color: var(--blue);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    text-align: center;
+    padding: 8px;
+    border-radius: 6px;
+    margin-bottom: 24px;
+    letter-spacing: 0.5px;
+  }
+
+  .grid {
+    display: grid;
+    gap: 16px;
+    max-width: 900px;
+    margin: 0 auto;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  @media (max-width: 620px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+  }
+
+  .card.span2 { grid-column: span 2; }
+  @media (max-width: 620px) { .card.span2 { grid-column: span 1; } }
+
+  .card-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  /* Big status indicator */
+  .room-visual {
+    position: relative;
+    height: 110px;
+    border-radius: 8px;
+    border: 2px solid var(--border);
+    background: #0d1520;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+    transition: border-color 0.4s;
+  }
+
+  .room-visual.occupied { border-color: var(--green); }
+  .room-visual.empty    { border-color: var(--border); }
+
+  .room-pulse {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(74, 222, 128, 0.08);
+    border: 2px solid rgba(74, 222, 128, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    transition: all 0.4s;
+  }
+
+  .room-visual.occupied .room-pulse {
+    animation: pulse-ring 1.5s ease-out infinite;
+    background: rgba(74, 222, 128, 0.15);
+    border-color: var(--green);
+  }
+
+  @keyframes pulse-ring {
+    0%   { box-shadow: 0 0 0 0 rgba(74,222,128,0.4); }
+    70%  { box-shadow: 0 0 0 20px rgba(74,222,128,0); }
+    100% { box-shadow: 0 0 0 0 rgba(74,222,128,0); }
+  }
+
+  .badges { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .badge.green  { background: var(--green-dim);  color: var(--green);  border: 1px solid var(--green); }
+  .badge.red    { background: var(--red-dim);    color: var(--red);    border: 1px solid var(--red); }
+  .badge.yellow { background: var(--yellow-dim); color: var(--yellow); border: 1px solid var(--yellow); }
+  .badge.blue   { background: var(--blue-dim);   color: var(--blue);   border: 1px solid var(--blue); }
+  .badge.gray   { background: #1e293b; color: var(--muted); border: 1px solid var(--border); }
+
+  .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    display: inline-block;
+  }
+  .dot.green  { background: var(--green);  animation: blink 1.2s steps(1) infinite; }
+  .dot.red    { background: var(--red); }
+  .dot.yellow { background: var(--yellow); animation: blink 2s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* Progress bars */
+  .pb-wrap {
+    background: #1e293b;
+    border-radius: 4px;
+    height: 6px;
+    margin-top: 10px;
+    overflow: hidden;
+  }
+  .pb {
+    height: 6px;
+    border-radius: 4px;
+    transition: width 1s linear, background 0.4s;
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-top: 10px;
+    font-size: 0.82rem;
+  }
+
+  .stat-row .label { color: var(--muted); font-size: 0.75rem; }
+  .stat-row .value { font-family: 'IBM Plex Mono', monospace; color: var(--bright); }
+
+  /* Sensor viz */
+  .sensor-box {
+    background: #0d1520;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .sensor-icon { font-size: 2rem; }
+  .sensor-val  {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1.4rem;
+    color: var(--bright);
+    font-weight: 600;
+  }
+  .sensor-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
+  /* AC unit animation */
+  .ac-unit {
+    position: relative;
+    width: 100%;
+    height: 80px;
+    background: linear-gradient(135deg, #1a2535, #0d1520);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    transition: border-color 0.4s;
+  }
+
+  .ac-unit.running { border-color: var(--blue); }
+
+  .ac-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--muted);
+    transition: color 0.4s;
+  }
+
+  .ac-unit.running .ac-label { color: var(--blue); }
+
+  .ac-fan {
+    font-size: 2rem;
+    transition: transform 0.1s;
+    display: inline-block;
+  }
+
+  .cold-stream {
+    position: absolute;
+    left: 0; right: 0; top: 0;
+    height: 100%;
+    pointer-events: none;
+    display: flex;
+    gap: 18px;
+    align-items: center;
+    padding-left: 10px;
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+
+  .ac-unit.running .cold-stream { opacity: 1; }
+
+  .stream-line {
+    height: 60%;
+    width: 2px;
+    background: linear-gradient(to bottom, transparent, var(--blue), transparent);
+    animation: stream-flow 0.8s linear infinite;
+    border-radius: 2px;
+  }
+
+  @keyframes stream-flow {
+    from { transform: translateY(-30px); opacity: 0; }
+    50%  { opacity: 0.7; }
+    to   { transform: translateY(30px);  opacity: 0; }
+  }
+
+  .stream-line:nth-child(2) { animation-delay: 0.2s; }
+  .stream-line:nth-child(3) { animation-delay: 0.4s; }
+  .stream-line:nth-child(4) { animation-delay: 0.6s; }
+
+  /* Controls */
+  .ctrl-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+
+  button {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 10px 6px;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    letter-spacing: 0.5px;
+  }
+
+  button:active { transform: scale(0.96); }
+
+  .btn-motion { background: #166534; color: #4ade80; border: 1px solid #4ade80; }
+  .btn-clear  { background: #3d1515; color: #f87171; border: 1px solid #f87171; }
+  .btn-temp   { background: #1e3a5f; color: #38bdf8; border: 1px solid #38bdf8; }
+
+  .sim-note {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-top: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* Timeline log */
+  .log-wrap {
+    max-height: 200px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .log-entry {
+    display: flex;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.75rem;
+    animation: fade-in 0.3s ease;
+  }
+
+  @keyframes fade-in { from { opacity: 0; transform: translateY(-4px); } }
+
+  .log-time { color: var(--muted); font-family: 'IBM Plex Mono', monospace; min-width: 60px; }
+  .log-msg  { color: var(--text); }
+  .log-msg.ac-on    { color: var(--green); }
+  .log-msg.ac-off   { color: var(--red); }
+  .log-msg.maint    { color: var(--yellow); }
+  .log-msg.override { color: var(--blue); }
+
+  /* Remote panel */
+  .remote-note {
+    background: var(--yellow-dim);
+    border: 1px solid var(--yellow);
+    color: var(--yellow);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-bottom: 14px;
+    line-height: 1.6;
+  }
+
+  .override-btns { display: flex; gap: 8px; margin-top: 10px; }
+  .btn-ov-on  { background: #052e16; color: var(--green);  border: 1px solid var(--green);  flex: 1; }
+  .btn-ov-off { background: var(--red-dim); color: var(--red);    border: 1px solid var(--red);    flex: 1; }
+  .btn-ov-auto{ background: var(--blue-dim); color: var(--blue);  border: 1px solid var(--blue); flex: 1; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Smart AC Controller</h1>
+  <p>ESP8266 + HC-SR501 PIR + DHT11 + 5V Relay</p>
+</header>
+
+<div class="demo-banner">
+  BROWSER SIMULATION -- No hardware needed. Real device runs this logic on ESP8266.
+</div>
+
+<div class="grid" id="mainGrid">
+
+  <!-- Room Status -->
+  <div class="card">
+    <div class="card-label">Room Status</div>
+    <div class="room-visual" id="roomVisual">
+      <div class="room-pulse" id="roomPulse">
+        <span id="roomEmoji">🚶</span>
+      </div>
+    </div>
+    <div class="badges">
+      <span class="badge gray" id="occBadge"><span class="dot" id="occDot"></span><span id="occText">Checking...</span></span>
+      <span class="badge gray" id="acBadge"><span class="dot" id="acDot"></span><span id="acText">AC OFF</span></span>
+    </div>
+    <div class="stat-row">
+      <span class="label" id="timerLabel">Since last motion</span>
+      <span class="value" id="timerVal">--</span>
+    </div>
+    <div class="pb-wrap"><div class="pb" id="timerBar" style="width:0%"></div></div>
+  </div>
+
+  <!-- AC Unit -->
+  <div class="card">
+    <div class="card-label">AC Unit (2 Ton)</div>
+    <div class="ac-unit" id="acUnit">
+      <div class="cold-stream">
+        <div class="stream-line"></div>
+        <div class="stream-line"></div>
+        <div class="stream-line"></div>
+        <div class="stream-line"></div>
+      </div>
+      <span class="ac-fan" id="acFan">❄️</span>
+      <span class="ac-label" id="acUnitLabel">STANDBY</span>
+    </div>
+    <div class="stat-row" style="margin-top:14px">
+      <span class="label">Mode</span>
+      <span class="value" id="modeVal">AUTO</span>
+    </div>
+    <div class="stat-row">
+      <span class="label">Next maintenance</span>
+      <span class="value" id="maintVal">--</span>
+    </div>
+    <div class="pb-wrap"><div class="pb" id="maintBar" style="width:0%"></div></div>
+  </div>
+
+  <!-- Sensors -->
+  <div class="card">
+    <div class="card-label">Sensor Readings</div>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+      <div class="sensor-box">
+        <span class="sensor-icon">🌡️</span>
+        <span class="sensor-val" id="tempVal">28.4</span>
+        <span class="sensor-label">Temperature C</span>
+      </div>
+      <div class="sensor-box">
+        <span class="sensor-icon">💧</span>
+        <span class="sensor-val" id="humVal">68</span>
+        <span class="sensor-label">Humidity %</span>
+      </div>
+    </div>
+    <div class="stat-row" style="margin-top:12px">
+      <span class="label">PIR Signal</span>
+      <span class="value" id="pirVal">LOW</span>
+    </div>
+    <div class="stat-row">
+      <span class="label">Relay</span>
+      <span class="value" id="relayVal">OPEN</span>
+    </div>
+  </div>
+
+  <!-- Simulation Controls -->
+  <div class="card">
+    <div class="card-label">Simulation Controls</div>
+    <div class="ctrl-grid">
+      <button class="btn-motion" onclick="sim.triggerMotion()">Trigger Motion</button>
+      <button class="btn-clear"  onclick="sim.clearRoom()">Clear Room</button>
+      <button class="btn-temp"   onclick="sim.jumpTime()">Skip 15 min</button>
+    </div>
+    <div class="sim-note">
+      Trigger Motion = someone enters the room.<br>
+      Clear Room = person leaves.<br>
+      Skip 15 min = fast-forward timer to see maintenance cycle.
+    </div>
+  </div>
+
+  <!-- Remote Control Panel -->
+  <div class="card span2">
+    <div class="card-label">Remote Control (Web Dashboard)</div>
+    <div class="remote-note">
+      On the real device, this panel is served from the ESP8266 at its local IP address (e.g. 192.168.1.42).
+      Open that IP in any browser on the same Wi-Fi to control your AC from your phone or laptop.
+    </div>
+    <div class="badges" id="overrideBadge" style="display:none">
+      <span class="badge yellow"><span class="dot yellow"></span>Manual Override Active</span>
+    </div>
+    <div class="override-btns">
+      <button class="btn-ov-on"  onclick="sim.override('on')">Force AC ON</button>
+      <button class="btn-ov-off" onclick="sim.override('off')">Force AC OFF</button>
+      <button class="btn-ov-auto" onclick="sim.override('auto')">Return to Auto</button>
+    </div>
+    <div class="sim-note" style="margin-top:8px">
+      Manual override lasts 30 minutes on the real device, then returns to automatic mode.
+    </div>
+  </div>
+
+  <!-- Event Log -->
+  <div class="card span2">
+    <div class="card-label">Event Log</div>
+    <div class="log-wrap" id="logWrap"></div>
+  </div>
+
+</div>
+
+<script>
+  // --------------------------------------------------
+  // Simulation state (mirrors what the ESP8266 firmware does)
+  // --------------------------------------------------
+
+  const OCCUPANCY_TIMEOUT  = 300;   // 5 minutes in seconds
+  const MAINT_CYCLE        = 900;   // 15 minutes
+  const MAINT_DURATION     = 60;    // 1 minute
+
+  const state = {
+    occupied:         false,
+    acOn:             false,
+    manualOverride:   false,
+    overrideOn:       false,
+    lastMotionTime:   null,
+    maintenanceTimer: Date.now(),     // when last maintenance cycle reference started
+    maintenanceStart: null,           // when current maintenance run started
+    inMaintenance:    false,
+    temp:             28.4,
+    humidity:         68,
+    bootTime:         Date.now(),
+    fanAngle:         0,
+  };
+
+  const log = [];
+
+  function addLog(msg, cls = '') {
+    const elapsed = Math.floor((Date.now() - state.bootTime) / 1000);
+    const h = String(Math.floor(elapsed/3600)).padStart(2,'0');
+    const m = String(Math.floor((elapsed%3600)/60)).padStart(2,'0');
+    const s = String(elapsed%60).padStart(2,'0');
+    log.unshift({ time: `${h}:${m}:${s}`, msg, cls });
+    if (log.length > 30) log.pop();
+    renderLog();
+  }
+
+  function renderLog() {
+    const wrap = document.getElementById('logWrap');
+    wrap.innerHTML = log.map(e =>
+      `<div class="log-entry"><span class="log-time">${e.time}</span><span class="log-msg ${e.cls}">${e.msg}</span></div>`
+    ).join('');
+  }
+
+  function setAC(on) {
+    if (state.acOn === on) return;
+    state.acOn = on;
+    addLog(on ? 'AC turned ON - relay closed' : 'AC turned OFF - relay open', on ? 'ac-on' : 'ac-off');
+  }
+
+  // --------------------------------------------------
+  // Simulation actions
+  // --------------------------------------------------
+  const sim = {
+    triggerMotion() {
+      if (state.manualOverride) return;
+      state.lastMotionTime = Date.now();
+      document.getElementById('pirVal').textContent = 'HIGH';
+      setTimeout(() => document.getElementById('pirVal').textContent = 'LOW', 600);
+      if (!state.occupied) {
+        state.occupied = true;
+        state.maintenanceTimer = null;
+        state.maintenanceStart = null;
+        state.inMaintenance    = false;
+        addLog('Motion detected. Room occupied.', 'ac-on');
+      } else {
+        addLog('Motion detected. Timer reset.');
+      }
+      setAC(true);
+    },
+
+    clearRoom() {
+      if (state.manualOverride) return;
+      state.lastMotionTime = Date.now() - (OCCUPANCY_TIMEOUT * 1000 + 100);
+      addLog('Simulating: no motion for ' + OCCUPANCY_TIMEOUT + 's');
+    },
+
+    jumpTime() {
+      if (!state.occupied && !state.manualOverride) {
+        state.maintenanceTimer = Date.now() - (MAINT_CYCLE * 1000 + 100);
+        addLog('Time skipped forward by 15 minutes', 'maint');
+      }
+    },
+
+    override(action) {
+      if (action === 'on') {
+        state.manualOverride = true;
+        state.overrideOn     = true;
+        setAC(true);
+        addLog('Remote override: AC forced ON', 'override');
+      } else if (action === 'off') {
+        state.manualOverride = true;
+        state.overrideOn     = false;
+        setAC(false);
+        addLog('Remote override: AC forced OFF', 'override');
+      } else {
+        state.manualOverride = false;
+        addLog('Returned to automatic mode', 'override');
+      }
+    },
+  };
+
+  // --------------------------------------------------
+  // Main loop (runs every 500ms to simulate firmware)
+  // --------------------------------------------------
+  function tick() {
+    const now = Date.now();
+
+    // Randomly drift temp and humidity a little
+    if (state.acOn) {
+      state.temp     = Math.max(20, state.temp - 0.002);
+      state.humidity = Math.max(40, state.humidity - 0.001);
+    } else {
+      state.temp     = Math.min(36, state.temp + 0.003);
+      state.humidity = Math.min(85, state.humidity + 0.002);
+    }
+
+    if (!state.manualOverride) {
+      // Check occupancy timeout
+      if (state.occupied && state.lastMotionTime) {
+        const secSince = (now - state.lastMotionTime) / 1000;
+        if (secSince >= OCCUPANCY_TIMEOUT) {
+          state.occupied         = false;
+          state.maintenanceTimer = now;
+          state.maintenanceStart = null;
+          state.inMaintenance    = false;
+          setAC(false);
+          addLog('Room empty. Next maintenance in ' + (MAINT_CYCLE/60) + ' min.');
+        }
+      }
+
+      // Maintenance cycle
+      if (!state.occupied && state.maintenanceTimer) {
+        const secInCycle = (now - state.maintenanceTimer) / 1000;
+
+        // Kick off maintenance run
+        if (!state.inMaintenance && secInCycle >= MAINT_CYCLE) {
+          state.inMaintenance    = true;
+          state.maintenanceStart = now;
+          setAC(true);
+          addLog('Maintenance cycle started. AC ON for 1 minute.', 'maint');
+        }
+
+        // End maintenance run
+        if (state.inMaintenance && state.maintenanceStart) {
+          const secIn = (now - state.maintenanceStart) / 1000;
+          if (secIn >= MAINT_DURATION) {
+            state.inMaintenance    = false;
+            state.maintenanceStart = null;
+            state.maintenanceTimer = now;
+            setAC(false);
+            addLog('Maintenance complete. AC OFF. Next in ' + (MAINT_CYCLE/60) + ' min.', 'maint');
+          }
+        }
+      }
+    }
+
+    updateUI(now);
+  }
+
+  function updateUI(now) {
+    // Room visual
+    const rv = document.getElementById('roomVisual');
+    const rp = document.getElementById('roomPulse');
+    if (state.occupied) {
+      rv.className = 'room-visual occupied';
+      document.getElementById('roomEmoji').textContent = '🚶';
+    } else {
+      rv.className = 'room-visual empty';
+      document.getElementById('roomEmoji').textContent = '🛋️';
+    }
+
+    // Occupancy badge
+    const ob  = document.getElementById('occBadge');
+    const od  = document.getElementById('occDot');
+    const ot  = document.getElementById('occText');
+    if (state.occupied) {
+      ob.className = 'badge green';
+      od.className = 'dot green';
+      ot.textContent = 'Occupied';
+    } else {
+      ob.className = 'badge gray';
+      od.className = 'dot';
+      od.style.background = '#475569';
+      ot.textContent = 'Empty';
+    }
+
+    // AC badge
+    const ab = document.getElementById('acBadge');
+    const ad = document.getElementById('acDot');
+    const at = document.getElementById('acText');
+    if (state.acOn) {
+      ab.className = 'badge green';
+      ad.className = 'dot green';
+      at.textContent = 'AC ON';
+    } else {
+      ab.className = 'badge red';
+      ad.className = 'dot red';
+      ad.style.animation = 'none';
+      at.textContent = 'AC OFF';
+    }
+
+    // AC unit
+    const acUnit = document.getElementById('acUnit');
+    const acLabel = document.getElementById('acUnitLabel');
+    if (state.acOn) {
+      acUnit.classList.add('running');
+      acLabel.textContent = state.inMaintenance ? 'MAINTENANCE' : 'COOLING';
+      // Spin fan
+      state.fanAngle = (state.fanAngle + 15) % 360;
+      document.getElementById('acFan').style.transform = `rotate(${state.fanAngle}deg)`;
+    } else {
+      acUnit.classList.remove('running');
+      acLabel.textContent = 'STANDBY';
+    }
+
+    // Occupancy progress
+    const timerLabel = document.getElementById('timerLabel');
+    const timerVal   = document.getElementById('timerVal');
+    const timerBar   = document.getElementById('timerBar');
+
+    if (state.occupied && state.lastMotionTime) {
+      const elapsed = Math.floor((now - state.lastMotionTime) / 1000);
+      const pct = Math.min(100, elapsed / OCCUPANCY_TIMEOUT * 100);
+      timerLabel.textContent = 'Since last motion';
+      timerVal.textContent   = elapsed + 's / ' + OCCUPANCY_TIMEOUT + 's';
+      timerBar.style.width   = pct + '%';
+      timerBar.style.background = '#4ade80';
+    } else if (!state.occupied) {
+      timerLabel.textContent = '';
+      timerVal.textContent   = '';
+      timerBar.style.width   = '0%';
+    }
+
+    // Maintenance bar
+    const maintVal = document.getElementById('maintVal');
+    const maintBar = document.getElementById('maintBar');
+    if (!state.occupied && state.maintenanceTimer) {
+      if (state.inMaintenance && state.maintenanceStart) {
+        const secIn = Math.floor((now - state.maintenanceStart) / 1000);
+        maintVal.textContent   = 'Running: ' + secIn + 's / ' + MAINT_DURATION + 's';
+        maintBar.style.width   = (secIn / MAINT_DURATION * 100) + '%';
+        maintBar.style.background = '#fbbf24';
+      } else {
+        const secIn = Math.floor((now - state.maintenanceTimer) / 1000);
+        const remaining = Math.max(0, MAINT_CYCLE - secIn);
+        const m = Math.floor(remaining / 60);
+        const s = remaining % 60;
+        maintVal.textContent   = m + 'm ' + s + 's';
+        maintBar.style.width   = (secIn / MAINT_CYCLE * 100) + '%';
+        maintBar.style.background = '#38bdf8';
+      }
+    } else if (state.occupied) {
+      maintVal.textContent = 'N/A (room occupied)';
+      maintBar.style.width = '0%';
+    }
+
+    // Mode
+    document.getElementById('modeVal').textContent = state.manualOverride ? 'MANUAL OVERRIDE' : 'AUTO';
+
+    // Override badge
+    document.getElementById('overrideBadge').style.display = state.manualOverride ? 'block' : 'none';
+
+    // Sensors
+    document.getElementById('tempVal').textContent  = state.temp.toFixed(1);
+    document.getElementById('humVal').textContent   = Math.round(state.humidity);
+    document.getElementById('relayVal').textContent = state.acOn ? 'CLOSED (AC ON)' : 'OPEN (AC OFF)';
+  }
+
+  // Boot
+  addLog('System started. Waiting for motion...');
+  setInterval(tick, 500);
+  tick();
+</script>
+</body>
+</html>
