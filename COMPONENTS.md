@@ -1,8 +1,6 @@
 # Components List - Smart AC Controller
 
-This file covers every component in the project: what it does, why it was chosen,
-what specs to look for when buying, and what you can substitute if the exact part
-is not available near you.
+This file lists proposed components and general selection considerations. It is not a validated mains design: part ratings, example prices and suggested substitutes do not prove suitability for an air-conditioner compressor or a permanent installation.
 
 
 ---
@@ -87,77 +85,19 @@ Search terms: "HC-SR501 PIR sensor", "PIR motion sensor module"
 ---
 
 
-### 3. 5V Single Channel Relay Module (10A / 250VAC)
+### 3. Switching interface — selection must be load-specific
 
-What it does:
-    A relay is an electrically controlled mechanical switch. The ESP8266 sends a signal
-    to the relay module, which then physically connects or disconnects the mains power
-    going to your AC. The relay completely isolates the mains voltage from the ESP8266,
-    which is important for safety.
+The active sketch drives a low-voltage relay input on D1 (GPIO5), with LOW interpreted as ON. This repository does not validate a particular relay's contacts, isolation, failure mode, thermal performance, or suitability for compressor inrush.
 
-Why this one:
-    A 5V relay module is the simplest way to control mains power with a microcontroller.
-    The module version (as opposed to a bare relay) includes the transistor, flyback diode,
-    and LED indicator already built in, so you just connect three wires.
+Do not treat a generic 10 A / 250 VAC relay as a safe minimum for an air conditioner. The actual appliance nameplate, starting/inrush current, switching category, protective devices, conductor sizing, enclosure, isolation and local standards must be evaluated together. Do not connect the relay contacts to mains based on this document. A qualified electrician must select and install the complete switching/protection assembly.
 
-What to look for when buying:
-    - Relay rating: at minimum 10A / 250VAC. A 2-ton AC draws around 8 to 10 amps.
-    - Coil voltage: 5V (to match the ESP8266 supply)
-    - Module type (not bare relay - the module has the driver circuit built in)
-    - Opto-isolated input is a bonus for extra safety between the ESP8266 and mains side
+The cost and model of a suitable switching interface are intentionally left undetermined here. A higher printed current rating alone is not a guarantee of safety.
 
-Current draw of a 2-ton AC:
-    A 2-ton (24,000 BTU) air conditioner running on 230V draws approximately:
-        Starting current (surge): up to 20 to 30 amps for half a second at startup
-        Running current: 8 to 10 amps continuously
+### 4. AC-to-DC power supply — proposed component only
 
-    This starting surge is important. A 10A relay can usually handle this surge because
-    the surge is very brief. However, for extra safety, a 16A rated relay is a better choice.
-    The cost difference is minimal (under 1 USD) and the peace of mind is worth it.
+The listed HLK-PM01 has a mains-voltage input. For development, power the NodeMCU from USB. Do not use an exposed AC/DC module as a permanent installation simply because it produces 5 V. Any mains-powered supply must be appropriately certified, enclosed, protected, installed with proper clearances and strain relief, and checked by a qualified electrician. Never handle its input side while energized.
 
-Acceptable substitutes:
-    - 16A relay module (same wiring, better safety margin - recommended)
-    - SSR-40DA Solid State Relay (no moving parts, longer life, no click sound, but more expensive around 5 USD)
-    - 2-channel relay module (use only one channel, the second channel can be a spare)
-
-Estimated cost: 1 to 2 USD
-Search terms: "5V relay module 10A", "single channel relay Arduino", "5V 10A 250VAC relay module"
-
-
----
-
-
-### 4. HLK-PM01 AC to DC 5V Power Module
-
-What it does:
-    This small module plugs into your mains wiring and produces 5V DC output.
-    It powers the ESP8266 and all the sensors without needing a USB charger
-    hanging out of a wall socket. It is what turns this project from a desk
-    experiment into a proper permanent installation.
-
-Why this one:
-    The HLK-PM01 is specifically designed for embedded use. It is very small
-    (about the size of a large postage stamp), reasonably efficient, and has
-    built-in short circuit protection. It is widely used in similar DIY projects
-    and has a good reliability record.
-
-What to look for when buying:
-    - HLK-PM01 (5V output, 600mA, 3W) or HLK-PM03 (5V, 600mA - same thing, different casing)
-    - Input voltage range that includes your local mains (usually 90-264VAC, which covers both 110V and 230V)
-    - At least 500mA output (the NodeMCU can draw up to 300mA under full Wi-Fi load)
-
-Acceptable substitutes:
-    - Any USB phone charger (plug it into a nearby socket, connect USB to NodeMCU - fine for testing)
-    - HLK-PM03 (same specs, slightly different shape)
-    - RAW-1205S (more expensive but DIN-rail mountable for panel installations)
-    - AMS1117-based modules (only for 3.3V systems, will need separate 5V for relay)
-
-Estimated cost: 2 to 4 USD
-Search terms: "HLK-PM01", "Hi-Link 5V power module", "AC DC 5V 600mA module"
-
-
----
-
+A USB supply is the preferred option for low-voltage prototype testing.
 
 ## Optional Components (Highly Recommended)
 
@@ -245,7 +185,7 @@ Estimated cost: negligible, usually comes in a resistor pack
     --------------------------------------|-----|-----------|-------
     NodeMCU ESP8266 v3                    |  1  | 3 - 5     | 3 - 5
     HC-SR501 PIR Sensor                   |  1  | 1 - 2     | 1 - 2
-    5V Relay Module 10A / 250VAC          |  1  | 1 - 2     | 1 - 2
+    Load-rated switching interface (electrician-selected) | 1 | TBD | TBD
     HLK-PM01 5V Power Module              |  1  | 2 - 4     | 2 - 4
     DHT11 Sensor Module                   |  1  | 1 - 2     | 1 - 2
     Jumper Wires                          |  1  | 1         | 1
@@ -276,3 +216,8 @@ International:
 
 When ordering from AliExpress, order 2 of each sensor in case one is defective.
 The cost difference is small and having a spare saves a lot of frustration.
+
+
+## Safety boundary
+
+Keep the relay load terminals disconnected from mains during firmware bring-up. This BOM does not establish that the relay, fuse, power supply, conductors, or enclosure are suitable for an AC unit. Do not use generic wire-size or relay-current suggestions as an installation design. Any mains switching assembly must be selected, enclosed, protected and installed by a qualified electrician under applicable local standards.
