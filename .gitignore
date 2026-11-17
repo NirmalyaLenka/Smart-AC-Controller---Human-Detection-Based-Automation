@@ -1,0 +1,15 @@
+# Local credentials or future private config (the current sketch still hardcodes placeholders)
+config_secrets.h
+
+# Arduino build output
+build/
+.pio/
+*.elf
+*.bin
+*.hex
+*.map
+
+# Editors and operating systems
+.vscode/
+.DS_Store
+Thumbs.db
