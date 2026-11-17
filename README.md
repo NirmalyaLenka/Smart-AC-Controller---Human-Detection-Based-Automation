@@ -16,7 +16,7 @@ This project helps you automatically control your air conditioner based on wheth
  
 ## Why These Components Were Chosen
  
-Everything in this list was picked to be affordable, widely available, and beginner-friendly. You can find all of these on Amazon, AliExpress, or your local electronics shop.
+The list below describes the prototype's intended components, not a validated installation. Price estimates and generic relay ratings are not evidence that a part is suitable for an air-conditioner compressor or mains circuit.
  
 ### Microcontroller - ESP8266 NodeMCU (around 3 to 5 USD)
  
@@ -26,13 +26,13 @@ This little board has Wi-Fi built in, which means you do not need a separate Wi-
  
 PIR stands for Passive Infrared. It detects the heat that humans and animals give off. When something warm moves in its field of view, it sends a signal to the microcontroller. It covers about a 120 degree cone and works reliably up to 7 meters. It has two small potentiometers on the back to adjust sensitivity and how long it stays triggered. Very cheap and very reliable for indoor use.
  
-### Relay Module - 5V Single Channel Relay (around 1 to 2 USD)
- 
-The relay is basically a switch that can be controlled electrically. Your ESP8266 tells the relay to open or close, and the relay then physically connects or disconnects the mains power going to the AC. The relay module usually comes with an indicator LED which is helpful when you are testing. Make sure you get one rated for at least 10A / 250VAC. A 2-ton AC draws around 8 to 10 amps so this is the minimum safe rating. If you want extra safety margin, get a 16A rated relay.
- 
+### Switching interface — not validated for mains use
+
+The sketch drives a low-voltage relay input on D1 (GPIO5), active LOW in the current firmware. The repository does not validate a particular relay, its contact rating, isolation, failure mode, or ability to handle compressor inrush. A generic 10 A relay must not be described as a safe minimum for an AC unit. Do not connect this prototype to mains or an air conditioner based on this README. A qualified electrician must select and install a suitable, enclosed switching interface and protection for the actual load and local standards.
+
 ### Power Supply - HLK-PM01 or USB 5V Adapter (around 2 to 4 USD)
  
-The HLK-PM01 is a tiny module that plugs into mains power and gives you 5V DC output. It is what powers the whole circuit without needing a separate USB charger plugged into the wall. If you are just testing on a desk, a regular phone charger works fine. For a permanent wall-mounted installation, the HLK module is cleaner.
+The HLK-PM01 has a mains-voltage input. For development, use USB power for the NodeMCU. Do not treat an exposed AC/DC module as a ready-made permanent supply; any mains-powered installation requires a suitable enclosure, protection, clearances and qualified installation.
  
 ### Optional Temperature Sensor - DHT11 or DHT22 (1 to 3 USD)
  
@@ -46,7 +46,7 @@ Not required, but nice to have. The DHT11 measures temperature and humidity and 
 |----------------------------------|----------|----------------------|
 | ESP8266 NodeMCU v3               | 1        | 3 - 5                |
 | HC-SR501 PIR Sensor              | 1        | 1 - 2                |
-| 5V Relay Module (10A / 250VAC)   | 1        | 1 - 2                |
+| Switching interface selected for the actual AC load by a qualified electrician | 1 | To be determined |
 | HLK-PM01 5V Power Module         | 1        | 2 - 4                |
 | DHT11 Temperature Sensor         | 1        | 1 - 2                |
 | Jumper wires                     | 10+      | 1                    |
@@ -56,89 +56,51 @@ Not required, but nice to have. The DHT11 measures temperature and humidity and 
  
 ---
  
-## Wiring Diagram (described in words)
- 
-### PIR Sensor to ESP8266
-- PIR VCC pin goes to the 5V pin on NodeMCU
-- PIR GND pin goes to GND on NodeMCU
-- PIR OUT pin goes to D2 (GPIO4) on NodeMCU
-### DHT11 to ESP8266
-- DHT11 VCC goes to 3.3V on NodeMCU
-- DHT11 GND goes to GND
-- DHT11 DATA goes to D4 (GPIO2) on NodeMCU
-### Relay Module to ESP8266
-- Relay VCC goes to 5V (the Vin pin on NodeMCU, which passes through USB 5V)
-- Relay GND goes to GND
-- Relay IN (signal) goes to D1 (GPIO5) on NodeMCU
-### Relay to AC Power
-This part involves mains electricity. Please be careful. If you are not comfortable working with 230V / 120V wiring, ask an electrician to help with just this last step.  <img width="458" height="608" alt="image" src="https://github.com/user-attachments/assets/f5f47fcc-0b59-4a9a-8c31-dea288fd7f56" />
+## Low-voltage wiring reference
 
- 
-- Cut one wire of the AC power cord (the Live / Line wire, usually brown or red)
-- Connect one end to the COM terminal on the relay
-- Connect the other end to the NO (Normally Open) terminal on the relay
-- When the relay closes, power flows. When it opens, the AC is off.
----
- 
+The current sketch uses these NodeMCU ESP8266 pins. Keep the relay's mains/load side disconnected during development.
+
+| Component signal | NodeMCU connection | Notes |
+|---|---|---|
+| HC-SR501 PIR VCC / GND | VIN/5 V and GND, as supported by the module | Check the exact sensor board's input rating. |
+| HC-SR501 PIR OUT | D2 / GPIO4 | Digital motion input. |
+| DHT11 VCC / GND | 3.3 V and GND | Match the sensor module's requirements. |
+| DHT11 DATA | D4 / GPIO2 | DHT11 in the current sketch. |
+| Relay control VCC / GND | Appropriate low-voltage supply and common GND | Verify the chosen module's requirements; do not connect its load terminals to mains during tests. |
+| Relay IN | D1 / GPIO5 | Firmware drives LOW for ON and HIGH for OFF. |
+
+See [WIRING.md](WIRING.md) for the low-voltage reference and the mains safety boundary. Do not follow generic step-by-step mains diagrams from older copies of this README.
+
 ## Software Setup
- 
-### Step 1 - Install the Arduino IDE
- 
-Download it from arduino.cc if you do not have it. The free version is fine.
- 
-### Step 2 - Add ESP8266 Board Support
- 
-Open Arduino IDE, go to File > Preferences, and paste this URL into the "Additional Board Manager URLs" box:
- 
-```
-http://arduino.esp8266.com/stable/package_esp8266com_index.json
-```
- 
-Then go to Tools > Board > Board Manager, search for "esp8266", and install it.
- 
-### Step 3 - Install Required Libraries
- 
-Go to Sketch > Include Library > Manage Libraries and install these:
- 
-- DHT sensor library by Adafruit
-- ESP8266WebServer (comes with the esp8266 board package)
-- ArduinoJson by Benoit Blanchon
-### Step 4 - Configure the Code
- 
-Open the file called `smart_ac_controller.ino`. Near the top you will find these lines:
- 
-```cpp
-const char* ssid = "YOUR_WIFI_NAME";
-const char* password = "YOUR_WIFI_PASSWORD";
-```
- 
-Change those to match your home Wi-Fi. Also check these settings and adjust if needed:
- 
-```cpp
-const int occupancyTimeout = 300;    // seconds before declaring room empty (5 minutes)
-const int maintenanceCycleMin = 15;  // minutes between maintenance cycles when empty
-const int maintenanceDurationMin = 1; // how long AC runs during maintenance
-```
- 
-### Step 5 - Upload the Code
- 
-- Connect the ESP8266 to your computer via USB
-- Select the correct board: Tools > Board > ESP8266 Boards > NodeMCU 1.0 (ESP-12E Module)
-- Select the correct port under Tools > Port
-- Click Upload (the arrow button)
-### Step 6 - Find the IP Address
- 
-Open the Serial Monitor (Tools > Serial Monitor, set baud to 115200). After a few seconds you will see something like:
- 
-```
-Connected to WiFi
-IP address: 192.168.1.42
-```
- 
-Type that IP address into your phone or laptop browser to open the web dashboard.
- 
----
- 
+
+### Prerequisites
+
+- Arduino IDE and the ESP8266 Arduino board package
+- NodeMCU ESP8266-compatible board
+- Arduino libraries: **DHT sensor library by Adafruit** and **ArduinoJson by Benoit Blanchon**. ESP8266WebServer and Wi-Fi support come with the ESP8266 board package.
+- USB data cable and Serial Monitor
+
+### 1. Configure the checked-in sketch
+
+Open the root-level smart_ac_controller.ino. The active sketch currently hardcodes Wi-Fi credentials and timing constants near the top:
+
+- ssid and password
+- occupancyTimeoutSec = 300 seconds
+- maintenanceCycleSec = 900 seconds
+- maintenanceDurationSec = 60 seconds
+- overrideTimeoutSec = 1800 seconds
+
+Replace the Wi-Fi placeholders only in a local working copy. Do not commit real credentials. The files named config (1).h and config_secrets.h.example are not included by the current sketch, so editing them alone does not change firmware behavior. The sketch uses port 80 directly; the WEB_SERVER_PORT value in config (1).h is not active.
+
+### 2. Upload and inspect logs
+
+1. Select **NodeMCU 1.0 (ESP-12E Module)** or the exact ESP8266 board you have.
+2. Select the correct serial port and upload the sketch.
+3. Open Serial Monitor at **115200 baud**.
+4. Read the assigned IP address from the boot log and open that address from a trusted device on the same LAN.
+
+Do not connect the relay's load terminals to mains during bring-up. Start with USB power and low-voltage sensor/relay-control checks.
+
 ## How the Logic Works
  
 1. The PIR sensor watches the room constantly
@@ -151,20 +113,12 @@ Type that IP address into your phone or laptop browser to open the web dashboard
 8. If someone walks back in at any point, the AC goes back to full-time on mode
 ---
  
-## Web Dashboard
- 
-Once you have the IP address, open it in any browser on the same Wi-Fi network.
- 
-The dashboard shows:
-- Current room status (occupied or empty)
-- AC state (on or off)
-- Temperature and humidity from the DHT11
-- How long until next maintenance cycle (when room is empty)
-- Manual override buttons to force AC on or off
-Remote activation from outside your home requires setting up port forwarding on your router, which varies by router model. For a simpler remote access option, look into a service like ngrok or Tailscale, both of which are free for personal use.
- 
----
- 
+## Web Dashboard and network exposure
+
+The sketch embeds a dashboard page and serves it at the root route. It also provides GET /status and GET /control? action commands (on, off, auto). The control endpoints have no authentication or authorization; anyone who can reach port 80 on the device may be able to change the relay state.
+
+Use only on a trusted local network. Do not configure router port forwarding, expose the controller directly to the internet, or rely on a tunnel as a substitute for authentication. The root index.html file is separate from the HTML embedded in the firmware and is not the file served by the current sketch.
+
 ## Troubleshooting
  
 **PIR keeps triggering even when room is empty**
@@ -182,51 +136,45 @@ DHT11 can take about a minute to stabilize after power-on. Also make sure you ha
 ---
  
 ## Safety Notes
- 
-- Do not work on mains wiring while the power is on. Always unplug everything first.
-- The relay handles mains voltage. Keep the relay wiring away from the low-voltage ESP8266 wiring.
-- Put everything inside an enclosure so nothing is accidentally touched.
-- A 2-ton AC can draw significant current. Make sure all wire gauges are rated for the load.
-- This is a DIY project and comes with no warranty. Build and use it at your own risk.
----
- 
-## File Structure
- 
+
+- This prototype is not a certified AC power controller.
+- Keep the relay's mains/load terminals disconnected during firmware and low-voltage testing.
+- Do not assume a relay's printed current rating makes it suitable for compressor inrush or continuous AC operation.
+- Any mains switching design must be selected, enclosed, protected and installed by a qualified electrician under applicable local standards.
+- Never work on energized mains wiring.
+- Do not expose the unauthenticated control endpoints to untrusted networks.
+- The code, wiring and hardware were not built or tested during this documentation review.
+
+## Actual repository file structure
+
+The current files are at the repository root; the older folder tree in previous versions of this README is not present.
+
+```text
+.
+├── smart_ac_controller.ino      # Active ESP8266 sketch; embeds the dashboard HTML
+├── index.html                   # Separate HTML file, not served by the current sketch
+├── README.md
+├── WIRING.md                    # Wiring and safety reference
+├── COMPONENTS.md                # Component notes and proposed BOM
+├── TROUBLESHOOTING (1).md       # Troubleshooting guide
+├── CHANGELOG.md                 # Release notes
+├── config (1).h                 # Not included by the active sketch
+├── config_secrets.h.example     # Template not included by the active sketch
+├── gitignore (2)                # Filename is not recognized by Git as .gitignore
+└── LICENSE (2)
 ```
-smart-ac-controller/
-  README.md                  - this file
-  smart_ac_controller.ino    - Arduino firmware for the ESP8266
-  demo.html                  - standalone demo to simulate the system in a browser
-  web_dashboard/
-    index.html               - the dashboard served by the ESP8266
-```
- ## file functions
 
-smart_ac_controller.ino — the main firmware that runs on the ESP8266. It reads the PIR sensor to detect human presence, controls the relay to switch the AC on and off, runs the 5-minute occupancy timeout, handles the 15-minute maintenance cycle with the 1-minute AC pulse, reads temperature and humidity from the DHT11 every 5 seconds, hosts the web server with the dashboard and JSON status endpoint, and processes manual override commands from the web.
+## File guide and known limitations
 
-config.h — the settings file. All timing values, pin numbers, relay polarity, device name, baud rate, web server port, and the optional static IP configuration live here. You change this file to customize behaviour without touching the main firmware code.
+- smart_ac_controller.ino — active firmware, hardcoded Wi-Fi placeholders and timing constants, relay control, embedded dashboard, JSON status endpoint and manual-control route.
+- WIRING.md — low-voltage signal connections and safety boundary. It is not a mains installation design.
+- COMPONENTS.md — proposed parts list; the previous generic relay-rating claims have been corrected to require load-specific validation.
+- TROUBLESHOOTING (1).md — upload, Wi-Fi, sensor and relay troubleshooting notes. Treat any mains-related steps as requiring qualified review.
+- CHANGELOG.md — intended release history and future ideas.
+- config (1).h and config_secrets.h.example — currently not included by the active sketch; changing these files alone does not configure the firmware.
+- index.html — standalone HTML file; the active firmware serves a separate embedded HTML string.
+- gitignore (2) — a renamed file, not an effective .gitignore. Never put real Wi-Fi credentials in tracked source files.
 
-config_secrets.h.example — a template for your Wi-Fi credentials. You rename it to config_secrets.h, fill in your network name and password, and it stays off GitHub because the gitignore blocks it.
-
-demo.html — a fully working browser simulation of the system. No hardware needed. You can trigger motion, clear the room, skip the timer forward, and watch the maintenance cycle run. Temperature and humidity drift in real time as the AC runs or sits idle.
-
-wiring_diagram.html — a colour-coded visual diagram showing every wire connection between all five components. Open it in any browser. The mains section is clearly separated and marked with warnings.
-
-WIRING.md — the full text wiring guide covering ASCII diagrams, plain English step-by-step instructions for each component, a shared ground explanation, NodeMCU pin reference table, recommended wire colours, and a checklist to run through before powering on for the first time.
-
-COMPONENTS.md — covers every component in detail: what it does, why it was chosen, what specs to look for when buying, acceptable cheaper or more accurate substitutes, estimated prices, and where to buy in India and internationally.
-
-TROUBLESHOOTING.md — a problem and solution guide covering the most common failures: code upload errors, Wi-Fi connection issues, dashboard not loading, PIR false triggers or no triggers, DHT11 bad readings, relay not clicking, relay clicking but AC staying off, and AC flickering.
-
-CHANGELOG.md — records what changed in each version and has a section listing possible future features like MQTT support, Home Assistant integration, OTA firmware updates, and temperature-based control.
-
-CONTRIBUTING.md — explains how to report bugs, suggest features, and submit pull requests. Includes code style guidelines, a list of what does and does not fit the project, and a short section for people who have never used Git before.
-
-LICENSE — MIT license giving anyone permission to use, modify, and share the project, with a safety disclaimer about mains voltage attached below it.
-
-.gitignore — tells Git to ignore Arduino build output files, the secrets credentials file, operating system junk files like .DS_Store and Thumbs.db, VS Code folders, and OTA firmware binaries so none of that ends up in your repository.
-
- 
 ## License
  
 MIT License. Use this however you want, personal or commercial.
@@ -240,10 +188,13 @@ MIT License. Use this however you want, personal or commercial.
 `Arduino/C++` · `C/C++` · `HTML/CSS`
 
 
-## How it works
+## How it works and verification status
 
-The main firmware sketch is `smart_ac_controller.ino`. Open it in Arduino IDE, verify the board, pin mapping and library requirements, then compile and upload. Test hardware behaviour on the real circuit before relying on it.
+The ESP8266 reads motion from the HC-SR501 PIR on D2/GPIO4, drives a relay-control signal on D1/GPIO5 (LOW = ON in the current sketch), and reads a DHT11 on D4/GPIO2. After 300 seconds without motion it turns the relay off; when the room is empty it runs a 60-second maintenance pulse after each 900-second cycle. Web overrides expire after 1800 seconds.
 
+Important limitations: the active sketch hardcodes Wi-Fi credentials and timing values, does not include the checked-in configuration headers, and exposes unauthenticated HTTP controls on port 80. The repository does not establish that the relay is suitable for AC compressor loads or that the mains design is safe.
+
+Only documentation was changed. No firmware build, network security test, or hardware test was performed.
 
 ## Maintenance & Audit
 
